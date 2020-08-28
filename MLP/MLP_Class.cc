@@ -8,7 +8,6 @@ float sigmoid(float x) {
 
 float func1(float x) {
 	return sin(2 * M_PI * x) + cos(4 * M_PI * x);
-	//return x*x;
 }
 
 float func2(float x) {
@@ -63,7 +62,7 @@ MLP::MLP(std::vector<int> nodesPerLayer, Matrix<float, Dynamic, Dynamic, ColMajo
 			a[i] = Matrix<float, Dynamic, 1>(M[i] + 1); 
 			a[i](0, 0) = -1; //setting the bias node of each layer to -1
 		}
-
+		//initialising the δh matrix which will be used for backpropagating errors
 		for (unsigned long i = 1; i < MSize; i++) {
 			δh[i - 1] = Matrix<float, Dynamic, 1> (M[i]); //the zeroth δh corresponds to the first hidden layer
 		}	
@@ -87,15 +86,13 @@ Matrix<float, Dynamic, Dynamic> MLP::recallRegression(Matrix<float, Dynamic, Dyn
 			/**************** Forward pass ******************/
 			a[0].block(1, 0, a[0].rows() - 1, 1) = inNormed.col(i); //setting the zeroth column of 'a' matrix to the input vector      
 			for (unsigned long j = 0; j < MSize - 2; j++) {
-				h = a[j].transpose() * w[j]; // get all the hk's at once
-				std::cout<<"h\n";
-				std::cout<<h<<"\n";
-				auto b = h.unaryExpr(&sigmoid).transpose(); 
+				h = (a[j].transpose() * w[j]).transpose(); // get all the hk's at once
+				auto b = h.unaryExpr(&sigmoid); 
 				a[j + 1].block(1, 0, M[j + 1], 1) = b;//filling the the inputs to the next hidden layer for a particular vector in X
 			}
 	
 			//forward pass for the output layer
-			h = a[MSize - 2].transpose() * w[MSize - 2]; // get all the hk's at once, modified for regression
+			h = (a[MSize - 2].transpose() * w[MSize - 2]).transpose(); // get all the hk's at once, modified for regression
 			y.col(i) = h; //output vector
 		}
 		
@@ -121,27 +118,22 @@ void MLP::MLP_Train_Regression() {
 				a[0].block(1, 0, a[0].rows() - 1, 1) = X.col(i); //setting the zeroth column of 'a' matrix to the input vector
 				
 				for (unsigned long j = 0; j < MSize - 2; j++) {
-					//printf("j = %lu a[%lu].rows() = %ld, w[%lu].rows() = %ld, w[%lu].cols() = %ld\n", j, j, a[j].rows(), j, w[j].rows(), j, w[j].cols());
-					h = a[j].transpose() * w[j]; // get all the hk's at once
-					//printf("h.cols() = %ld\n", h.cols());
-					auto b = h.unaryExpr(&sigmoid).transpose(); 
+					h = (a[j].transpose() * w[j]).transpose(); // get all the hk's at once
+					auto b = h.unaryExpr(&sigmoid); 
 					a[j + 1].block(1, 0, M[j + 1], 1) = b;//filling the the inputs to the next hidden layer for a particular vector in X
 				}
 				
 				//forward pass for the output layer
 				h = (a[MSize - 2].transpose() * w[MSize - 2]).transpose(); // get all the hk's at once, modified for regression
-				//std::cout<<h<<" h\n";
 				y.col(i) = h; //output vector
-				//std::cout<<y.col(i)<<" ycoli\n";
 				error = ((y.col(i) - t.col(i)).transpose() * (y.col(i) - t.col(i)))(0, 0);
-				//printf("inreg\n");
+				//calculating the error every 10000 counts
 				if (count%10000 == 0) {
 					count = 0;
 					error = ((y.col(i) - t.col(i)).transpose() * (y.col(i) - t.col(i)))(0, 0);
 					errorV.push_back(sqrt(error));
 				} 
 				
-				//printf("error = %f\n", error);
 				/***************** Backpropagation phase ******************/
 
 				//running once for the output layer, iterating over all the output nodes
@@ -157,9 +149,8 @@ void MLP::MLP_Train_Regression() {
 				}
 				w[0] = w[0] - η * a[0] * δh[0].transpose(); //updating the weights of the last layer
 			}
-			//printf("T = %d error = %f\n", epoch, error);
 		}
-		printf("total count = %llu\n", count);
+		//printf("total count = %llu\n", count);
 }
 	
 	// training for classification problem
@@ -176,12 +167,12 @@ void MLP::MLP_Train_Classifier() {
 				/**************** Forward pass ******************/
 				a[0].block(1, 0, a[0].rows() - 1, 1) = X.col(i); //setting the zeroth column of 'a' matrix to the input vector
 				for (unsigned long j = 0; j < MSize - 2; j++) {
-					h = a[j].transpose() * w[j]; // get all the hk's at once
-					auto b = h.unaryExpr(&sigmoid).transpose(); 
+					h = (a[j].transpose() * w[j]).transpose(); // get all the hk's at once
+					auto b = h.unaryExpr(&sigmoid); 
 					a[j + 1].block(1, 0, M[j + 1], 1) = b;//filling the the inputs to the next hidden layer for a particular vector in X
 				}
 				//forward pass for the output layer
-				h = a[MSize - 2].transpose() * w[MSize - 2]; // get all the hk's at once
+				h = (a[MSize - 2].transpose() * w[MSize - 2]).transpose(); // get all the hk's at once
 				y.col(i) = h.unaryExpr(&sigmoid); //output vector
 			
 				/***************** Backpropagation phase ******************/
@@ -233,22 +224,25 @@ int main() {
 	for (int i = 0; i < X.cols(); i++) {
 		X(i) = (float)(i + 1)/X.cols();
 	}
-
+	
+	//testing the MLP for an output layer with 2 nodes
+	//this will mean two rows for the Y matrix
 	Matrix<float, Dynamic, Dynamic> Y;
+	
 	Y.resize(M[M.size() - 1], X.cols());
 	Y.row(0) = X.unaryExpr(&func1);
-
 	Y.row(1) = X.unaryExpr(&func2);
-	/*for (int i = 0; i < X.cols(); i++) {
-		std::cout<<X(i)<<"  "<<Y(i)<<"\n";
-	}*/
+	
+	//initialising the MLP object
 	MLP mlpReg(M, X, Y, 1000000);
 	
+	//checking the basic stats
 	std::cout<<"mean\n";
 	std::cout<<mlpReg.getMEAN()<<"\n";
 	std::cout<<"stddev\n";
 	std::cout<<mlpReg.getSTDDEV()<<"\n";
 	
+	//timing the training
 	auto start = std::chrono::steady_clock::now();
 	mlpReg.MLP_Train_Regression();
 	auto end = std::chrono::steady_clock::now();
@@ -257,6 +251,7 @@ int main() {
 	std::cout<<"total time = "<<totalTime<<"\n";
 	std::vector<float> erV = mlpReg.getErrV();
 	
+	//writing the errors to see if they decrease
 	std::ofstream dataFile;
 	dataFile.open("errorV.txt");
 	for (unsigned long i = 0; i < erV.size(); i++) {
@@ -264,19 +259,24 @@ int main() {
 	}
 	dataFile.close();
 	
+	//storing the weights
 	std::vector<Matrix<float, Dynamic, Dynamic>> w = mlpReg.getW();
 	dataFile.open("weights.txt");
 	for (unsigned long i = 0; i < w.size(); i++) {
 		dataFile<<w[i]<<"\n";
 	}
 	dataFile.close();
-	//recall testing Alhamdulillaah works well
+	
+	//recall testing 
+	//Alhamdulillaah works well!☺️
+	
 	Matrix<float, Dynamic, Dynamic> Xrecall(1, 1), Yrecall(1, 1);
-	std::minstd_rand engine(time(NULL));
+	/*std::minstd_rand engine(time(NULL));
 	std::uniform_real_distribution<float> dist(0, 1);
 	for (int i = 0; i < Xrecall.cols(); i++) {
 		Xrecall(i) = dist(engine);
-	}
+	}*/
+	
 	Xrecall(0) = 0.0;
 	
 	Matrix<float, Dynamic, Dynamic> Yactual = Xrecall.unaryExpr(&func1);
