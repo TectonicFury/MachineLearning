@@ -1,7 +1,7 @@
 #include <iostream>
 #include <string>
 #include <fstream>
-#include "Desktop/pyAhmad/C++_Algs4/MLP_Class.h"
+#include "MLP/MLP_Class.h"
 
 int main() {
 
@@ -28,15 +28,16 @@ int main() {
 	M[1] = 25;
 	M[2] = 25;
 	M[3] = 17;
-	Matrix<float, 1, 31> X; //crude feed rate
-	Matrix<float, 17, 31> T; //target matrix of products
-	for (int i = 0; i < T.rows(); i++) {
+	Matrix<float, Dynamic, Dynamic> X; //crude feed rate
+	Matrix<float, Dynamic,Dynamic > T; //target matrix of products
+	for (long i = 0; i < T.rows(); i++) {
 		for (int j = 0; j < T.cols(); j++) {
 			T(i, j) = vData[i + 1][j];
 		}
 	}
 	MLP mlp_crd(M, X, T, 100000);
-	//MLP(std::vector<int> nodesPerLayer, Matrix<float, Dynamic, Dynamic, ColMajor> inputData, Matrix<float, Dynamic, Dynamic, ColMajor> targetMatrix, int totalTraining)
+	//function definitio below
+    //MLP(std::vector<int> nodesPerLayer, Matrix<float, Dynamic, Dynamic, ColMajor> inputData, Matrix<float, Dynamic, Dynamic, ColMajor> targetMatrix, int totalTraining)
 	auto start = std::chrono::steady_clock::now();
 	mlp_crd.MLP_Train_Regression();
 	auto end = std::chrono::steady_clock::now();
@@ -47,7 +48,7 @@ int main() {
 	
 	std::ofstream dataFile;
 	dataFile.open("errorCRD.txt");
-	for (long long int i = 0; i < erV.size(); i++) {
+	for (unsigned long int i = 0; i < erV.size(); i++) {
 		dataFile<<erV[i]<<std::endl;
 	}
 	dataFile.close();
