@@ -9,32 +9,41 @@ int main() {
 	std::string str;
 	std::string tempstr;
 	std::vector<float> vTemp;
-
+	//int count = 0;
+	//int count2;
 	while(std::getline(std::cin, str)) {
+		//count2 = 0;
 		for (unsigned long i = 0; i < str.size(); i++) {
 			if (std::isdigit(str[i]) || str[i] == '.') {
 				tempstr.append(1, str[i]);
 			} else {
+				//printf("count2 = %d\n%s\n", ++count2, tempstr.c_str());
 				vTemp.push_back(std::stof(tempstr));
 				tempstr = "";
 			}
 		}
 		vData.push_back(vTemp);
 		vTemp.clear();
+		//printf("*********** count = %d*************\n", ++count);
 	}
 	
-	std::vector<int> M(4);
+	std::vector<int> M(3);
 	M[0] = 1;
 	M[1] = 25;
-	M[2] = 25;
-	M[3] = 17;
-	Matrix<float, Dynamic, Dynamic> X; //crude feed rate
-	Matrix<float, Dynamic,Dynamic > T; //target matrix of products
+	M[2] = 16;
+	//M[3] = 16;
+	Matrix<float, Dynamic, Dynamic> X(1, vData[0].size()); //crude feed rate
+	for (int i = 0; i < X.cols(); i++) {
+		X(i) = vData[0][i];
+	}
+	Matrix<float, Dynamic,Dynamic > T(16, X.cols()); //target matrix of products
 	for (long i = 0; i < T.rows(); i++) {
 		for (int j = 0; j < T.cols(); j++) {
 			T(i, j) = vData[i + 1][j];
 		}
 	}
+	std::cout<<"X\n";
+	std::cout<<X<<"\n";
 	MLP mlp_crd(M, X, T, 100000);
 	//function definitio below
     //MLP(std::vector<int> nodesPerLayer, Matrix<float, Dynamic, Dynamic, ColMajor> inputData, Matrix<float, Dynamic, Dynamic, ColMajor> targetMatrix, int totalTraining)

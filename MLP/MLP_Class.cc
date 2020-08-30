@@ -103,13 +103,14 @@ Matrix<float, Dynamic, Dynamic> MLP::recallRegression(Matrix<float, Dynamic, Dyn
 void MLP::MLP_Train_Regression() {
 		y.resize(M[MSize - 1], t.cols());
 		unsigned long long int count = 0;
-		float η = 0.025;
+		float η = 0.000001;
 		int nTrngData = X.cols();
 	 	Matrix<float, Dynamic, Dynamic> h;
 		MatrixXf MOnes = MatrixXf::Ones(M[MSize - 1], 1);
 		float error;
 		//each input column of X will have first entry -1 for the input bias 
-
+		//std::cout<<"t.rows() = "<<t.rows()<<" t.cols() = "<<t.cols()<<"\n";
+		//std::cout<<"y.rows() = "<<y.rows()<<" y.cols() = "<<y.cols()<<"\n";
 		for (int epoch = 0; epoch < T; epoch++) {
 			//if (epoch > 0 && epoch % 100 == 0) η -= 0.01;
 			for (int i = 0; i < nTrngData; i++) {
@@ -126,11 +127,14 @@ void MLP::MLP_Train_Regression() {
 				//forward pass for the output layer
 				h = (a[MSize - 2].transpose() * w[MSize - 2]).transpose(); // get all the hk's at once, modified for regression
 				y.col(i) = h; //output vector
+				//std::cout<<"y.col("<<i<<") = \n"<<y.col(i)<<"\n";
+			//	std::cout<<"t.col("<<i<<") = "<<t.col(i)<<"\n";
 				error = ((y.col(i) - t.col(i)).transpose() * (y.col(i) - t.col(i)))(0, 0);
 				//calculating the error every 10000 counts
-				if (count%10000 == 0) {
-					count = 0;
+				if (count%1000 == 0) {
+					//count = 0;
 					error = ((y.col(i) - t.col(i)).transpose() * (y.col(i) - t.col(i)))(0, 0);
+					//printf("%f\n", error);
 					errorV.push_back(sqrt(error));
 				} 
 				
@@ -150,7 +154,7 @@ void MLP::MLP_Train_Regression() {
 				w[0] = w[0] - η * a[0] * δh[0].transpose(); //updating the weights of the last layer
 			}
 		}
-		//printf("total count = %llu\n", count);
+		printf("total count = %llu\n", count);
 }
 	
 	// training for classification problem
@@ -213,7 +217,7 @@ std::vector<float> MLP::getErrV() {
 	return errorV;
 }
 
-int main() {
+/*int main() {
 	std::vector<int> M(3); //has information about the number of inputs, hidden nodes and output nodes in each of the layers
 	M[0] = 1; //two input features
 	M[1] = 10; //one output node, no hidden layers
@@ -271,16 +275,16 @@ int main() {
 	//Alhamdulillaah works well!☺️
 	
 	Matrix<float, Dynamic, Dynamic> Xrecall(1, 1), Yrecall(1, 1);
-	/*std::minstd_rand engine(time(NULL));
+	std::minstd_rand engine(time(NULL));
 	std::uniform_real_distribution<float> dist(0, 1);
 	for (int i = 0; i < Xrecall.cols(); i++) {
 		Xrecall(i) = dist(engine);
 	}*/
 	
-	Xrecall(0) = 0.0;
+	/*Xrecall(0) = 0.0;
 	
 	Matrix<float, Dynamic, Dynamic> Yactual = Xrecall.unaryExpr(&func1);
 	Yrecall = mlpReg.recallRegression(Xrecall);
 	std::cout<<Yrecall<<"\n";
 	std::cout<<Yactual<<"\n";
-}
+}*/
