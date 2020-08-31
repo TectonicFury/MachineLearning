@@ -103,7 +103,7 @@ Matrix<float, Dynamic, Dynamic> MLP::recallRegression(Matrix<float, Dynamic, Dyn
 void MLP::MLP_Train_Regression() {
 		y.resize(M[MSize - 1], t.cols());
 		unsigned long long int count = 0;
-		float η = 0.000001;
+		float η = 0.0000001;
 		int nTrngData = X.cols();
 	 	Matrix<float, Dynamic, Dynamic> h;
 		MatrixXf MOnes = MatrixXf::Ones(M[MSize - 1], 1);
