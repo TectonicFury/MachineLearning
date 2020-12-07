@@ -1,6 +1,6 @@
 #ifndef MLP_CLASS_H
 #define MLP_CLASS_H
-
+//checking out terminal
 #include <iostream>
 #include <chrono>
 #include <ctime>
